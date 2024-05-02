@@ -51,6 +51,8 @@ body {
     justify-content: space-between;
     column-gap: 25px;
     width: 300px;
+    /* border: 1px solid white; */
+    margin: 0 auto;
 }
 
 #playerChoice {
@@ -59,7 +61,7 @@ body {
 
 .playerLabel {
     font-size: 20px;
-    margin-top: 10p;
+    margin-top: 10px;
 }
 .assets {
     display: none;
@@ -67,6 +69,16 @@ body {
 
 #gameMenu {
     display: block;
+    padding-top: 10px;
+    text-align: center;
+}
+
+#playerChoice {
+    padding: 20px 0;
+}
+
+#playerChoice > div {
+    padding: 10px 5px;
 }
 
 #gameOverScreen {
@@ -76,4 +88,14 @@ body {
     height: 100%;
     background-repeat: no-repeat;
     background-size: cover;
+}
+
+#message1 {
+    font-size: 30px;
+    text-align: center;
+}
+
+#message2 {
+    font-size: 20px;
+    text-align: center;
 }

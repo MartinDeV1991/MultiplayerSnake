@@ -1,5 +1,5 @@
 class Snake {
-    constructor(game, x, y, speedX, speedY, color, name) {
+    constructor(game, x, y, speedX, speedY, color, name, image) {
         this.game = game;
         this.x = x;
         this.y = y;
@@ -12,16 +12,36 @@ class Snake {
         this.score = 0;
         this.length = 3;
         this.segments = [];
+        for (let i = 0; i < this.length; i++) {
+            if (i > 0) {
+                this.x += this.speedX;
+                this.y += this.speedY;
+            }
+            this.segments.unshift({ x: this.x, y: this.y, frameX: 0, frameY: 0 });
+        }
         this.readyToTurn = true;
         this.name = name;
+        this.image = image;
+        this.spriteWidth = 200;
+        this.spriteHeight = 200;
     }
     update() {
         this.readyToTurn = true;
         // check collision
         if (this.game.checkCollision(this, this.game.food)) {
+            if (this.game.food.frameY === 1) {
+                this.score--;
+                if (this.length > 2) {
+                    this.length--;
+                    if (this.segments.length > this.length) {
+                        this.segments.pop();
+                    }
+                }
+            } else {
+                this.score++;
+                this.length++;
+            }
             this.game.food.reset();
-            this.score++;
-            this.length++;
         }
 
         // boundaries
@@ -36,24 +56,29 @@ class Snake {
         if (this.moving) {
             this.x += this.speedX;
             this.y += this.speedY;
-            this.segments.unshift({ x: this.x, y: this.y });
+            this.segments.unshift({ x: this.x, y: this.y, frameX: 0, frameY: 0 });
             if (this.segments.length > this.length) {
                 this.segments.pop();
             }
         }
         if (this.score >= this.game.winningScore) {
-            this.game.gameUi.triggerGameOver();
+            this.game.gameUi.triggerGameOver(this);
         }
     }
     draw() {
         this.segments.forEach((segment, i) => {
-            if (i === 0) {
-                this.game.ctx.fillStyle = 'gold';
+            if (this.game.debug) {
+                if (i === 0) {
+                    this.game.ctx.fillStyle = 'gold';
+                }
+                else {
+                    this.game.ctx.fillStyle = this.color;
+                }
+
+                this.game.ctx.fillRect(segment.x * this.game.cellSize, segment.y * this.game.cellSize, this.width, this.height);
             }
-            else {
-                this.game.ctx.fillStyle = this.color;
-            }
-            this.game.ctx.fillRect(segment.x * this.game.cellSize, segment.y * this.game.cellSize, this.width, this.height);
+            this.setSpriteFrame(i);
+            this.game.ctx.drawImage(this.image, segment.frameX * this.spriteWidth, segment.frameY * this.spriteWidth, this.spriteWidth, this.spriteHeight, segment.x * this.game.cellSize, segment.y * this.game.cellSize, this.width, this.height);
         })
     }
     turnUp() {
@@ -88,11 +113,116 @@ class Snake {
             this.readyToTurn = false;
         }
     }
+    setSpriteFrame(index) {
+        const segment = this.segments[index];
+        const prevSegment = this.segments[index - 1];
+        const nextSegment = this.segments[index + 1];
+
+        if (index === 0) { // head
+            if (segment.y < nextSegment.y) {
+                if (this.game.food.y === segment.y - 1 && this.game.food.x === segment.x) {
+                    segment.frameX = 7;
+                    segment.frameY = 1;
+                } else {
+                    segment.frameX = 1;
+                    segment.frameY = 2;
+                }
+            } else if (segment.y > nextSegment.y) {
+                if (this.game.food.y === segment.y + 1 && this.game.food.x === segment.x) {
+                    segment.frameX = 7;
+                    segment.frameY = 3;
+                } else {
+                    segment.frameX = 0;
+                    segment.frameY = 4;
+                }
+            } else if (segment.x < nextSegment.x) {
+                if (this.game.food.x === segment.x - 1 && this.game.food.y === segment.y) {
+                    segment.frameX = 2;
+                    segment.frameY = 4;
+                } else {
+                    segment.frameX = 0;
+                    segment.frameY = 0;
+                }
+            } else if (segment.x > nextSegment.x) {
+                if (this.game.food.x === segment.x + 1 && this.game.food.y === segment.y) {
+                    segment.frameX = 4;
+                    segment.frameY = 4;
+                } else {
+                    segment.frameX = 2;
+                    segment.frameY = 1;
+                }
+            }
+
+        } else if (index === this.segments.length - 1) { // tail
+            if (prevSegment.y < segment.y) {
+                segment.frameX = 1;
+                segment.frameY = 4;
+            } else if (prevSegment.y > segment.y) {
+                segment.frameX = 0;
+                segment.frameY = 2;
+            } else if (prevSegment.x < segment.x) {
+                segment.frameX = 2;
+                segment.frameY = 0;
+            } else if (prevSegment.x > segment.x) {
+                segment.frameX = 0;
+                segment.frameY = 1;
+            }
+        } else { // body
+            if (nextSegment.x < segment.x && prevSegment.x > segment.x) {
+                segment.frameX = 5;
+                segment.frameY = 3;
+            } else if (prevSegment.x < segment.x && nextSegment.x > segment.x) {
+                segment.frameX = 5;
+                segment.frameY = 2;
+            } else if (prevSegment.y < segment.y && nextSegment.y > segment.y) {
+                segment.frameX = 1;
+                segment.frameY = 3;
+            } else if (nextSegment.y < segment.y && prevSegment.y > segment.y) {
+                segment.frameX = 0;
+                segment.frameY = 3;
+            }
+
+            // bend counter clockwise
+            else if (prevSegment.x < segment.x && nextSegment.y > segment.y) { // up left
+                segment.frameX = 4;
+                segment.frameY = 0;
+            } else if (prevSegment.y > segment.y && nextSegment.x > segment.x) { // left down
+                segment.frameX = 3;
+                segment.frameY = 0;
+            } else if (prevSegment.x > segment.x && nextSegment.y < segment.y) { // down right
+                segment.frameX = 3;
+                segment.frameY = 1;
+            } else if (prevSegment.y < segment.y && nextSegment.x < segment.x) { // right up
+                segment.frameX = 4;
+                segment.frameY = 1;
+            }
+
+            // bend clockwise
+            else if (nextSegment.x < segment.x && prevSegment.y > segment.y) { // right down
+                segment.frameX = 3;
+                segment.frameY = 2;
+            } else if (nextSegment.y < segment.y && prevSegment.x < segment.x) { // down left
+                segment.frameX = 3;
+                segment.frameY = 3;
+            } else if (nextSegment.x > segment.x && prevSegment.y < segment.y) { // left up
+                segment.frameX = 2;
+                segment.frameY = 3;
+            } else if (nextSegment.y > segment.y && prevSegment.x > segment.x) { // up right
+                segment.frameX = 2;
+                segment.frameY = 2;
+            }
+
+            else {
+                segment.frameX = 6;
+                segment.frameY = 0;
+            }
+        }
+    }
 }
 
 class Keyboard1 extends Snake {
-    constructor(game, x, y, speedX, speedY, color, name) {
-        super(game, x, y, speedX, speedY, color, name);
+    constructor(game, x, y, speedX, speedY, color, name, image) {
+        super(game, x, y, speedX, speedY, color, name, image);
 
         window.addEventListener('keydown', e => {
             if (e.key === 'ArrowUp') this.turnUp();
@@ -104,8 +234,8 @@ class Keyboard1 extends Snake {
 }
 
 class Keyboard2 extends Snake {
-    constructor(game, x, y, speedX, speedY, color, name) {
-        super(game, x, y, speedX, speedY, color, name);
+    constructor(game, x, y, speedX, speedY, color, name, image) {
+        super(game, x, y, speedX, speedY, color, name, image);
 
         window.addEventListener('keydown', e => {
             if (e.key.toLowerCase() === 'w') this.turnUp();
@@ -117,26 +247,49 @@ class Keyboard2 extends Snake {
 }
 
 class ComputerAi extends Snake {
-    constructor(game, x, y, speedX, speedY, color, name) {
-        super(game, x, y, speedX, speedY, color, name);
+    constructor(game, x, y, speedX, speedY, color, name, image) {
+        super(game, x, y, speedX, speedY, color, name, image);
         this.turnTimer = 0;
-        this.turnInterval;
+        this.ai_difficulty = document.getElementById('ai_difficulty').value;
+        this.turnInterval = Math.floor(Math.random() * this.ai_difficulty) + 1;
     }
     update() {
         super.update();
-        if (this.turnTimer < this.turnInterval) {
-            this.turnTimer += 1;
-        } else {
-            this.turnTimer = 0;
+        if (this.x === this.game.food.x && this.speedY === 0 || this.y === this.game.food.y && this.speedX === 0) {
             this.turn();
-            this.turnInterval = Math.floor(Math.random() * 8 + 1);
+        } else {
+            if (this.turnTimer < this.turnInterval) {
+                this.turnTimer += 1;
+            } else {
+                this.turnTimer = 0;
+                this.turn();
+                this.turnInterval = Math.floor(Math.random() * this.ai_difficulty) + 1;
+            }
         }
     }
     turn() {
-        if (this.speedY === 0) {
-            Math.random() < 0.5 ? this.turnUp() : this.turnDown();
-        } else if (this.speedX === 0) {
-            Math.random() < 0.5 ? this.turnLeft() : this.turnRight();
+        // don't turn if moving towards food
+        const food = this.game.food;
+        if (food.x === this.x && food.y < this.y && this.speedY < 0) return;
+        else if (food.x === this.x && food.y > this.y && this.speedY > 0) return;
+        else if (food.y === this.y && food.x < this.x && this.speedX < 0) return;
+        else if (food.y === this.y && food.x > this.x && this.speedX > 0) return;
+
+
+        if (food.x < this.x && this.speedX === 0) {
+            this.turnLeft();
+        } else if (food.x > this.x && this.speedX === 0) {
+            this.turnRight();
+        } else if (food.y < this.y && this.speedY === 0) {
+            this.turnUp();
+        } else if (food.y > this.y && this.speedY === 0) {
+            this.turnDown();
+        } else {
+            if (this.speedY === 0) {
+                Math.random() < 0.5 ? this.turnUp() : this.turnDown();
+            } else if (this.speedX === 0) {
+                Math.random() < 0.5 ? this.turnLeft() : this.turnRight();
+            }
         }
     }
 }

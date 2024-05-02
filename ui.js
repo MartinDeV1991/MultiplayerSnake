@@ -9,7 +9,7 @@ class Ui {
         this.startButton = document.getElementById('startButton');
         this.gameMenu = document.getElementById('gameMenu');
         this.gameOverScreen = document.getElementById('gameOverScreen');
-        
+
         this.startButton.addEventListener('click', () => {
             this.game.start();
             console.log('Starting the game!')
@@ -19,15 +19,28 @@ class Ui {
             this.game.toggleFullScreen();
         });
 
+        this.debugButton = document.getElementById('debugButton');
+        this.debugButton.addEventListener('click', () => {
+            this.game.debug = !this.game.debug;
+        });
+
         this.player1controls = document.getElementById('player1controls');
         this.player2controls = document.getElementById('player2controls');
         this.player3controls = document.getElementById('player3controls');
         this.player4controls = document.getElementById('player4controls');
-        
+
         this.player1name = document.getElementById('player1name');
         this.player2name = document.getElementById('player2name');
         this.player3name = document.getElementById('player3name');
         this.player4name = document.getElementById('player4name');
+
+        this.player1character = document.getElementById('player1character');
+        this.player2character = document.getElementById('player2character');
+        this.player3character = document.getElementById('player3character');
+        this.player4character = document.getElementById('player4character');
+
+        this.message1 = document.getElementById('message1');
+        this.message2 = document.getElementById('message2');
     }
     update() {
         this.scoreBoard1.innerText = this.game.player1.name + ': ' + this.game.player1.score;
@@ -35,9 +48,16 @@ class Ui {
         this.scoreBoard3.innerText = this.game.player3.name + ': ' + this.game.player3.score;
         this.scoreBoard4.innerText = this.game.player4.name + ': ' + this.game.player4.score;
     }
-    triggerGameOver() {
+    triggerGameOver(winner) {
         this.game.gameOver = true;
         this.gameOverUi();
+        if (winner) {
+            this.message1.innerText = winner.name + 'wins!';
+            this.message2.innerText = 'Game time: ' + this.game.formatTimer() + ' seconds';
+        } else {
+            this.message1.innerText = 'Welcome to the battle arena!';
+            this.message2.innerText = 'Initialized your players';
+        }
     }
     gamePlayUi() {
         this.gameMenu.style.display = 'none';

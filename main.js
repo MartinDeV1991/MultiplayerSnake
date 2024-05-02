@@ -12,6 +12,7 @@ class Game {
         this.eventTimer = 0;
         this.eventInterval = 200;
         this.eventUpdate = false;
+        this.timer = 0;
 
         this.gameOver = true;
         this.winningScore = 2;
@@ -23,18 +24,23 @@ class Game {
         this.food;
         this.background;
         this.gameObjects;
+        this.debug = true;
         this.gameUi = new Ui(this);
+
+        window.addEventListener('keyup', e=> {
+            if (e.key === '-') {
+                this.toggleFullScreen();
+            } else if (e.key === '+') {
+                this.debug = !this.debug;
+            }
+        })
 
         window.addEventListener('resize', e => {
             this.resize(e.currentTarget.innerWidth, e.currentTarget.innerHeight);
         });
         this.resize(window.innerWidth, window.innerHeight);
 
-        window.addEventListener('keyup', e=> {
-            if (e.key === '-') {
-                this.toggleFullScreen();
-            }
-        })
+        // this.start();
 
     }
     resize(width, height) {
@@ -50,34 +56,39 @@ class Game {
         this.background = new Background(this);
     }
     initPlayer1() {
+        const image = document.getElementById(this.gameUi.player1character.value);
         const name = this.gameUi.player1name.value;
         if (this.gameUi.player1controls.value === 'arrows') {
-            this.player1 = new Keyboard1(this, 0, this.topMargin, 1, 0, 'orangered', name);
+            this.player1 = new Keyboard1(this, 0, this.topMargin, 1, 0, 'orangered', name, image);
         } else {
-            this.player1 = new ComputerAi(this, 0, this.topMargin, 1, 0, 'orangered', name);
+            this.player1 = new ComputerAi(this, 0, this.topMargin, 1, 0, 'orangered', name, image);
         }
     }
     initPlayer2() {
+        const image = document.getElementById(this.gameUi.player2character.value);
         const name = this.gameUi.player2name.value;
         if (this.gameUi.player2controls.value === 'wasd') {
-            this.player2 = new Keyboard2(this, this.columns - 1, this.topMargin, 0, 1, 'magenta', name);
+            this.player2 = new Keyboard2(this, this.columns - 1, this.topMargin, 0, 1, 'magenta', name, image);
         } else {
-            this.player2 = new ComputerAi(this, this.columns - 1, this.topMargin, 0, 1, 'magenta', name);
+            this.player2 = new ComputerAi(this, this.columns - 1, this.topMargin, 0, 1, 'magenta', name, image);
         }
     }
     initPlayer3() {
+        const image = document.getElementById(this.gameUi.player3character.value);
         const name = this.gameUi.player3name.value;
-        this.player3 = new ComputerAi(this, this.columns - 1, this.rows - 1, -1, 0, 'yellow', name);
+        this.player3 = new ComputerAi(this, this.columns - 1, this.rows - 1, -1, 0, 'yellow', name, image);
     }
     initPlayer4() {
+        const image = document.getElementById(this.gameUi.player4character.value);
         const name = this.gameUi.player4name.value;
-        this.player4 = new ComputerAi(this, 0, this.rows - 1, 0, -1, 'darkblue', name);
+        this.player4 = new ComputerAi(this, 0, this.rows - 1, 0, -1, 'darkblue', name, image);
     }
     start() {
         if (!this.gameOver) {
             this.gameUi.triggerGameOver();
         } else {
             this.gameOver = false;
+            this.timer = 0;
             this.gameUi.gamePlayUi();
             this.initPlayer1();
             this.initPlayer2();
@@ -107,6 +118,10 @@ class Game {
     checkCollision(a, b) {
         return a.x === b.x && a.y === b.y;
     }
+    formatTimer() {
+        return (this.timer * 0.001).toFixed(1);
+    }
+
     toggleFullScreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen();
@@ -126,10 +141,12 @@ class Game {
     }
     render(deltaTime) {
         this.handlePeriodicEvents(deltaTime);
+        if (!this.gameOver) this.timer += deltaTime
+        // console.log(this.formatTimer());
         if (this.eventUpdate && !this.gameOver) {
             this.ctx.clearRect(0, 0, this.width, this.height);
             this.background.draw();
-            this.drawGrid();
+            if (this.debug) this.drawGrid();
             this.gameObjects.forEach(object => {
                 object.draw();
                 object.update();
