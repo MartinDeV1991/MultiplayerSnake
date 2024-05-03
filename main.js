@@ -17,7 +17,7 @@ class Game {
         this.timer = 0;
 
         this.gameOver = true;
-        this.winningScore = 2;
+        this.winningScore = 20;
 
         this.player1;
         this.player2;
