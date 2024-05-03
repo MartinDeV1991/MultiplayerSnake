@@ -17,11 +17,13 @@ class Ui {
         this.fullScreenButton = document.getElementById('fullScreenButton');
         this.fullScreenButton.addEventListener('click', () => {
             this.game.toggleFullScreen();
+            this.game.sound.play(this.game.sound.button);
         });
 
         this.debugButton = document.getElementById('debugButton');
         this.debugButton.addEventListener('click', () => {
             this.game.debug = !this.game.debug;
+            this.game.sound.play(this.game.sound.button);
         });
 
         this.player1controls = document.getElementById('player1controls');
@@ -52,8 +54,14 @@ class Ui {
         this.game.gameOver = true;
         this.gameOverUi();
         if (winner) {
-            this.message1.innerText = winner.name + 'wins!';
+            this.message1.innerText = winner.name + ' wins!';
             this.message2.innerText = 'Game time: ' + this.game.formatTimer() + ' seconds';
+            for (let i = 0; i < this.game.numberOfParticles; i++) {
+                const particle = this.game.getParticle();
+                if (particle) {
+                    particle.start(Math.random() * this.game.width, this.game.height * 0.9, 'gold');
+                }
+            }
         } else {
             this.message1.innerText = 'Welcome to the battle arena!';
             this.message2.innerText = 'Initialized your players';

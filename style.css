@@ -18,6 +18,17 @@ body {
     max-height: 100%;
 }
 
+#canvas2 {
+    position: absolute;
+    max-width: 100%;
+    max-height: 100%;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    pointer-events: none;
+}
+
+
 #controls {
     position: absolute;
     border: 5px solid black;
